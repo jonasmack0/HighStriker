@@ -12,8 +12,14 @@ public class PhysicsButton : MonoBehaviour
     private bool _isPressed;
     private Vector3 _startPos;
     private ConfigurableJoint _joint;
-    private float _collisionSpeed;
+    private float collisionSpeed;
+    private Vector3 rocketDirection = Vector3.up;
+    private bool rocketStarted = false;
+    public float minY = 0.1f;
+    public float maxY = 0.698f;
 
+    public Rigidbody rocket;
+    public float forceMultiplier = 1.0f;
     public UnityEvent onPressed, onReleased;     
 
     // Start is called before the first frame update
@@ -30,6 +36,9 @@ public class PhysicsButton : MonoBehaviour
             Pressed();
         if (_isPressed && GetValue() - threshold <= 0)
             Released();
+
+        //float clampedY = Mathf.Clamp(transform.position.y, minY, maxY);
+        //transform.position = new Vector3(transform.position.x, clampedY, transform.position.z);
     }
 
     private float GetValue()
@@ -44,8 +53,8 @@ public class PhysicsButton : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        float speed = collision.relativeVelocity.magnitude;
-        Debug.Log("Collision speed: " + speed);
+        collisionSpeed = collision.relativeVelocity.magnitude;
+        Debug.Log("Collision speed: " + collisionSpeed);
     }
 
     private void Pressed()
@@ -53,6 +62,15 @@ public class PhysicsButton : MonoBehaviour
         _isPressed = true;
         onPressed.Invoke();
         Debug.Log("Pressed");
+
+        if (!rocketStarted)
+        {
+            if (collisionSpeed > 0.1f)
+            {
+                rocket.AddForce(rocketDirection * collisionSpeed * forceMultiplier, ForceMode.Impulse);
+                rocketStarted = true;
+            }
+        }
     }
 
     private void Released()
